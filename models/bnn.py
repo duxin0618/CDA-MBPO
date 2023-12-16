@@ -60,7 +60,6 @@ class BNN:
         self.layers_source_before = []
         self.critic = []
         self.decays, self.optvars, self.nonoptvars = [], [], []
-        self.decays_adapt, self.optvars_adapt = [], []
         self.decays_copy, self.optvars_copy = [], []
         self.decays_critic, self.optvars_critic = [], []
         self.end_act, self.end_act_name = None, None
@@ -70,15 +69,6 @@ class BNN:
         self.optimizer = None
         self.sy_train_in, self.sy_train_targ = None, None
         self.train_op, self.mse_loss = None, None
-
-        # adapt objects
-        self.optimizer_adapt = None
-        self.optimizer_critic = None
-        self.train_op_wd = None
-        self.train_op_critic = None
-        self.source_train_in = None
-        self.target_train_in = None
-        self.wd_loss = None
 
         # Prediction objects
         self.sy_pred_in2d, self.sy_pred_mean2d_fac, self.sy_pred_var2d_fac = None, None, None
@@ -157,7 +147,7 @@ class BNN:
 
         return self.layers.pop()
 
-    def finalize(self, adapt_batch_size, optimizer, optimizer_args=None, *args, **kwargs):
+    def finalize(self, optimizer, optimizer_args=None, *args, **kwargs):
         """Finalizes the network.
 
         Arguments:
@@ -211,12 +201,7 @@ class BNN:
                         layer.construct_vars()
                         self.decays.extend(layer.get_decays())
                         self.optvars.extend(layer.get_vars())
-            with tf.variable_scope(self.name + 'adapt'):
-                for i, layer in enumerate(self.layers_target):
-                    with tf.variable_scope("Layer%i" % i):
-                        layer.construct_vars()
-                        self.decays_adapt.extend(layer.get_decays())
-                        self.optvars_adapt.extend(layer.get_vars())
+
             with tf.variable_scope(self.name + 'src'):
                 for i, layer in enumerate(self.layers_source_before):
                     with tf.variable_scope("Layer%i" % i):
@@ -252,39 +237,9 @@ class BNN:
             self.mse_loss = self._compile_losses(self.sy_train_in, self.sy_train_targ, inc_var_loss=False)
             self.train_op = self.optimizer.minimize(train_loss, var_list=self.optvars)
 
-        # Set up model adaptation
-        with tf.variable_scope('adapt'):
-            self.optimizer_adapt = tf.train.AdamOptimizer(learning_rate=1e-4)
-            self.optimizer_critic = tf.train.AdamOptimizer(learning_rate=1e-4)
-            self.source_train_in = tf.placeholder(dtype=tf.float32,
-                                                  shape=[self.num_nets, None, self.layers[0].get_input_dim()],
-                                                  name="source_inputs")
-            self.target_train_in = tf.placeholder(dtype=tf.float32,
-                                                  shape=[self.num_nets, None, self.layers[0].get_input_dim()],
-                                                  name="target_inputs")
-            h_s, h_t = self._compile_features(self.source_train_in, self.target_train_in)
-
-            source_out = critic_fc1.compute_output_tensor(h_s)
-            critic_source_out = critic_fc2.compute_output_tensor(source_out)
-            target_out = critic_fc1.compute_output_tensor(h_t)
-            critic_target_out = critic_fc2.compute_output_tensor(target_out)
-            self.wd_loss = tf.reduce_mean(critic_source_out) - tf.reduce_mean(critic_target_out)
-
-            alpha = tf.random_uniform(shape=[self.num_nets, adapt_batch_size, 1], minval=0., maxval=1.)
-            differences = h_s - h_t
-            interpolates = h_t + (alpha * differences)
-            interpolates_out = critic_fc1.compute_output_tensor(interpolates)
-            critic_interpolates_out = critic_fc2.compute_output_tensor(interpolates_out)
-            gradients = tf.gradients(critic_interpolates_out, [interpolates])[0]
-            slopes = tf.sqrt(1e-8 + tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-            gradient_penalty = tf.reduce_mean((slopes - 1) ** 2)
-
-            self.train_op_critic = self.optimizer_critic.minimize(
-                -self.wd_loss + 10 * gradient_penalty + tf.add_n(self.decays_critic), var_list=self.optvars_critic)
-            self.train_op_wd = self.optimizer_adapt.minimize(self.wd_loss, var_list=self.optvars_adapt + self.optvars)
-        # Initialize all variables
+        # # Initialize all variables
         self.sess.run(tf.variables_initializer(
-            self.optvars + self.optvars_adapt + self.optvars_critic + self.nonoptvars + self.optimizer.variables() + self.optimizer_adapt.variables() + self.optimizer_critic.variables()))
+            self.optvars + self.optvars_critic + self.nonoptvars + self.optimizer.variables()))
 
         # Set up prediction
         with tf.variable_scope(self.name):
@@ -349,9 +304,7 @@ class BNN:
 
     def _start_train(self):
         self._state = {}
-        self._state_adapt = {}
         self._snapshots = {i: (None, 1e10) for i in range(self.num_nets)}
-        self._snapshots_adapt = {i: (None, 1e10) for i in range(self.num_nets)}
         self._epochs_since_update = 0
 
     def _end_train(self, holdout_losses):
@@ -547,23 +500,6 @@ class BNN:
         model_metrics = {'train_loss': train_loss, 'val_loss': val_loss}
         print('[ BNN ] Holdout', np.sort(holdout_losses), model_metrics)
         return OrderedDict(model_metrics)
-
-    def adapt(self, source_input, target_input, batch_size=32, max_steps=200, n_itr_critic=5):
-        self.copy_source_to_target()
-        s_idx = np.tile(np.arange(source_input.shape[0]), (self.num_nets, 1))
-        t_idx = np.tile(np.arange(target_input.shape[0]), (self.num_nets, 1))
-        s_batches = batch_generator(s_idx, batch_size)
-        t_batches = batch_generator(t_idx, batch_size)
-        # for _ in tqdm(range(max_steps)):
-        for _ in range(max_steps):
-            for _ in range(n_itr_critic):
-                sb = s_batches.__next__()
-                tb = t_batches.__next__()
-                self.sess.run(self.train_op_critic, feed_dict={self.source_train_in: source_input[sb],
-                                                               self.target_train_in: target_input[tb]})
-            self.sess.run(self.train_op_wd,
-                          feed_dict={self.source_train_in: source_input[sb], self.target_train_in: target_input[tb]})
-        self.copy_target_to_source()
 
     def use_src_train(self, train_inputs, train_outputs, **kwarg):
         model_metrics = self.train(train_inputs, train_outputs, **kwarg)

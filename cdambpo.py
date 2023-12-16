@@ -59,13 +59,7 @@ class CDAMBPO(RLAlgorithm):
             rollout_schedule=[20, 100, 1, 1],
             hidden_dim=200,
             max_model_t=None,
-
-            use_ampo=False,
-            n_adapt_per_epoch=2000,
-            epoch_stop_adapt=1000,
             n_itr_critic=5,
-            adapt_batch_size=256,
-
             po_stop_epoch=-1,
             src_min_length=1,
             use_src=False,
@@ -108,21 +102,16 @@ class CDAMBPO(RLAlgorithm):
         obs_dim = np.prod(training_environment.observation_space.shape)
         act_dim = np.prod(training_environment.action_space.shape)
         self._model = construct_model(obs_dim=obs_dim, act_dim=act_dim, hidden_dim=hidden_dim,
-                                      num_networks=num_networks, num_elites=num_elites,
-                                      adapt_batch_size=adapt_batch_size)
+                                      num_networks=num_networks, num_elites=num_elites)
         self._static_fns = static_fns
         self._env_name = env_name
         self._tag = tag
         self.fake_env = FakeEnv(self._model, self._static_fns)
 
         self._rollout_schedule = rollout_schedule
-        self._epoch_stop_adapt = epoch_stop_adapt
         self._max_model_t = max_model_t
-        self._n_adapt_per_epoch = n_adapt_per_epoch
         self._n_itr_critic = n_itr_critic
-        self._adapt_batch_size = adapt_batch_size
         self._po_stop_epoch = po_stop_epoch
-        self._use_ampo = use_ampo
 
         self._src_min_length = src_min_length
         self._use_src = use_src
@@ -264,7 +253,7 @@ class CDAMBPO(RLAlgorithm):
                     print('Finish train the model')
                     self._set_rollout_length()
                     self._reallocate_model_pool()
-                    # model train by src function
+
                     if self._use_src and self._src_epoch_stop > self._epoch \
                             and self._src_max_length >= self._rollout_length \
                             and self._src_min_length <= self._rollout_length:
@@ -279,7 +268,7 @@ class CDAMBPO(RLAlgorithm):
                         model_metrics = self.constructor_model_metrics(model_by_src_function_train_metrics,
                                                                        model_metrics)
                         print('Finish use src function train the model')
-                        # end training by src function
+
                     else:
                         model_by_src_function_train_metrics = {'src_model_train_loss': 0, 'src_model_val_loss': 0}
                         model_metrics = self.constructor_model_metrics(model_by_src_function_train_metrics,
@@ -388,20 +377,6 @@ class CDAMBPO(RLAlgorithm):
             metarget[key + '_mean'] = vmean
             metarget[key + '_var'] = vvar
         return metarget
-
-    def _set_n_adapt(self):
-        if str(type(self._n_adapt_per_epoch))[-13:-2] == 'ListWrapper':
-            min_epoch, max_epoch, min_adapt, max_adapt = self._n_adapt_per_epoch
-            if self._epoch <= min_epoch:
-                y = min_adapt
-            else:
-                dx = (self._epoch - min_epoch) / (max_epoch - min_epoch)
-                dx = min(dx, 1)
-                y = dx * (max_adapt - min_adapt) + min_adapt
-
-            self._n_adapt = int(y)
-        else:
-            self._n_adapt = self._n_adapt_per_epoch
 
     def _set_rollout_length(self):
         min_epoch, max_epoch, min_length, max_length = self._rollout_schedule
@@ -518,13 +493,6 @@ class CDAMBPO(RLAlgorithm):
         train_inputs, train_outputs = format_samples_for_training(env_samples)
         model_metrics = self._model.train(train_inputs, train_outputs, **kwargs)
         return model_metrics
-
-    def _adapt_model(self, batch_size=256, max_steps=200, n_itr_critic=5):
-        source_samples = self._pool.return_all_samples()
-        target_samples = self._model_pool.return_all_samples()
-        source_inputs, source_outputs = format_samples_for_training(source_samples)
-        target_inputs, target_outputs = format_samples_for_training(target_samples)
-        self._model.adapt(source_inputs, target_inputs, batch_size, max_steps=max_steps, n_itr_critic=n_itr_critic)
 
     def _train_model_by_src_function(self, **kwargs):
         # Iterate once for training

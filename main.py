@@ -30,6 +30,26 @@ NUM_INITIAL_EXPLORATION_STEPS = {
     'Humanoid': 5000,
 }
 
+Q_FUNCTION_HIDDEN_SIZE = {
+    'Hopper': (256, 256),
+    'Walker2d': (256, 256),
+    'Ant': (256, 256),
+    'Swimmer': (256, 256),
+    'InvertedPendulum': (256, 256),
+    'HalfCheetah': (256, 256),
+    'Humanoid': (256, 256, 256),
+}
+
+MODEL_HIDDEN_DIM = {
+    'Hopper': 200,
+    'Walker2d': 200,
+    'Ant': 200,
+    'Swimmer': 200,
+    'InvertedPendulum': 200,
+    'HalfCheetah': 200,
+    'Humanoid': 400,
+}
+
 params['kwargs']['n_epochs'] = NUM_EPOCHS_PER_DOMAIN[domain]
 params['kwargs']['n_initial_exploration_steps'] = NUM_INITIAL_EXPLORATION_STEPS[domain]
 params['kwargs']['reparameterize'] = True
@@ -38,6 +58,7 @@ params['kwargs']['target_update_interval'] = 1
 params['kwargs']['tau'] = 5e-3
 params['kwargs']['store_extra_policy_info'] = False
 params['kwargs']['action_prior'] = 'uniform'
+
 
 variant_spec = {
         'environment_params': {
@@ -64,7 +85,7 @@ variant_spec = {
         'Q_params': {
             'type': 'double_feedforward_Q_function',
             'kwargs': {
-                'hidden_layer_sizes': (256, 256),
+                'hidden_layer_sizes': Q_FUNCTION_HIDDEN_SIZE[domain],
             }
         },
         'algorithm_params': params,
@@ -88,12 +109,9 @@ variant_spec = {
             'checkpoint_replay_pool': False,
         },
         'dir_path': {
-            'log_dir_test': './log/testcode/',
-            'log_dir_mbpo': './log/mbpo/',
-            'log_dir_ablation': './log/ablation/',
-            'log_dir': './log/',
-            'store_dir': './log/samples/'
-        }
+            'log_dir_test': './log/testcode_cda/',
+        },
+        'hidden_dim': MODEL_HIDDEN_DIM[domain]
     }
 
 exp_runner = runner.ExperimentRunner(variant_spec)

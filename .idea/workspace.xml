@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3dd3c2db-78fd-4014-a528-ae0b4632cb0d" name="Default Changelist" comment="first">
+      <change beforePath="$PROJECT_DIR$/cdambpo.py" beforeDir="false" afterPath="$PROJECT_DIR$/cdambpo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/bnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/bnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/constructor.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/constructor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="2Uz76eiap99apjXftA75LIgFKDZ" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="false" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="web.server" />
+    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/../AutoSCQD/scqdmbpo.py" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3dd3c2db-78fd-4014-a528-ae0b4632cb0d" name="Default Changelist" comment="" />
+      <created>1693930380752</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1693930380752</updated>
+      <workItem from="1693930382615" duration="5648000" />
+      <workItem from="1694232473686" duration="598000" />
+      <workItem from="1694534008316" duration="4430000" />
+      <workItem from="1694605162948" duration="602000" />
+      <workItem from="1696607144657" duration="1228000" />
+      <workItem from="1696642886707" duration="136000" />
+      <workItem from="1702706170818" duration="7829000" />
+    </task>
+    <task id="LOCAL-00001" summary="first">
+      <created>1693932944814</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1693932944814</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="first" />
+    <option name="LAST_COMMIT_MESSAGE" value="first" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/CDA_MBPO$sys.coverage" NAME="sys Coverage Results" MODIFIED="1693930658482" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Library/Caches/JetBrains/PyCharm2021.1/python_stubs/314552380" />
+  </component>
+</project>

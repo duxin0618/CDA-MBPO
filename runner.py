@@ -17,7 +17,7 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 class ExperimentRunner:
     def __init__(self, variant):
         import os
-        os.environ["CUDA_VISIBLE_DEVICES"] = '3'
+        os.environ["CUDA_VISIBLE_DEVICES"] = '2'
         self.variant = variant
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -30,7 +30,7 @@ class ExperimentRunner:
     def build(self):
         environment_params = self.variant['environment_params']
         dir_path_params = self.variant['dir_path']
-
+        hidden_dim = self.variant['hidden_dim']
         training_environment = self.training_environment = (get_environment_from_params(environment_params['training']))
         evaluation_environment = self.evaluation_environment = (
             get_environment_from_params(environment_params['evaluation'])
@@ -49,7 +49,7 @@ class ExperimentRunner:
 
         tag = time.time()
         env_name = self.variant['environment_params']['training']['domain']
-        log_dir = dir_path_params['log_dir_test']  # log_dir log_dir_test log_dir_mbpo log_dir_ablation
+        log_dir = dir_path_params['log_dir_test']
 
         if not os.path.exists(log_dir+'%s' % env_name):
             os.makedirs(log_dir+'%s' % env_name)
@@ -74,6 +74,7 @@ class ExperimentRunner:
             static_fns=static_fns,
             sampler=sampler,
             session=self._session,
+            hidden_dim=hidden_dim,
             log_file=log_dir+'%s/test_%s_%d.log' % (self.variant['algorithm_params']['domain'], env_name, tag),
             diagnostics_file=diagnostics_file,
             env_name=env_name,
